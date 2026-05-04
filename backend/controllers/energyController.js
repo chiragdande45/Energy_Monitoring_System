@@ -14,10 +14,15 @@ export const storeSensorData = async (req, res) => {
   try {
     const { device_id, voltage, current, power, energy } = req.body;
     
+    // Debug logging
+    console.log('📡 Received ESP32 data:', { device_id, voltage, current, power, energy });
+    
     // Determine data source based on request headers or user agent
     const userAgent = req.get('User-Agent') || '';
+    console.log('🔍 User-Agent:', userAgent);
     const isSimulated = userAgent.includes('axios') || userAgent.includes('node') || userAgent.includes('Simulator');
     const dataSource = isSimulated ? 'simulated' : 'esp32';
+    console.log('📊 Data source determined as:', dataSource);
 
     // Check if device exists in users table, if not create a default user
     const [existingUser] = await pool.query(
@@ -37,15 +42,19 @@ export const storeSensorData = async (req, res) => {
         'INSERT INTO user_settings (device_id) VALUES (?)',
         [device_id]
       );
+      console.log('👤 Created default user for device:', device_id);
     }
 
     await pool.query(
       'INSERT INTO energy_data (device_id, voltage, current, power, energy) VALUES (?, ?, ?, ?, ?)',
       [device_id, voltage, current, power, energy]
     );
+    console.log('💾 Data stored in database');
 
     // Broadcast to connected clients via Socket.IO with data source info
-    req.app.get('io').to(device_id).emit('sensorData', { 
+    const io = req.app.get('io');
+    console.log('📡 Broadcasting to WebSocket clients for device:', device_id);
+    io.to(device_id).emit('sensorData', { 
       voltage, 
       current, 
       power, 
@@ -53,9 +62,11 @@ export const storeSensorData = async (req, res) => {
       timestamp: new Date(),
       dataSource 
     });
+    console.log('✅ WebSocket broadcast complete');
 
     res.status(201).json({ message: 'Data stored successfully', dataSource });
   } catch (error) {
+    console.error('❌ Error in storeSensorData:', error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -70,14 +81,31 @@ export const getLiveData = async (req, res) => {
     );
 
     if (rows.length === 0) {
-      return res.json({ status: 'offline', message: 'No data available' });
+      return res.json({ status: 'offline', message: 'No data available', dataSource: 'unknown' });
     }
 
     const data = rows[0];
+    // Check if data is less than 10 seconds old
     const timeDiff = (Date.now() - new Date(data.timestamp).getTime()) / 1000;
     const status = timeDiff < 10 ? 'online' : 'offline';
+    const dataSource = status === 'online' ? 'esp32' : 'offline';
 
-    res.json({ ...data, status, lastUpdate: data.timestamp });
+    // Calculate total accumulated energy for today
+    const [energyRows] = await pool.query(
+      `SELECT SUM(energy) as total_energy FROM energy_data 
+       WHERE device_id = ? AND DATE(timestamp) = CURDATE()`,
+      [device_id]
+    );
+    
+    const totalEnergy = parseFloat(energyRows[0]?.total_energy || 0);
+
+    res.json({ 
+      ...data, 
+      status, 
+      lastUpdate: data.timestamp, 
+      dataSource,
+      energy: totalEnergy // Return accumulated energy for today
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

@@ -94,9 +94,50 @@ export const RealTimeProvider = ({ children }) => {
         energy.getSettings()
       ]);
 
+      let currentSettings = settings;
+      
+      if (settingsResponse.status === 'fulfilled' && settingsResponse.value?.data) {
+        currentSettings = settingsResponse.value.data;
+        setSettings(currentSettings);
+      }
+
       if (liveResponse.status === 'fulfilled' && liveResponse.value?.data) {
         const liveDataResponse = liveResponse.value.data;
         setLiveData(liveDataResponse);
+        setLastUpdate(new Date()); // Update lastUpdate time when we fetch data
+        setDataSource(liveDataResponse.dataSource || 'api'); // Mark as API source
+        
+        // Set isConnected based on the status from backend
+        setIsConnected(liveDataResponse.status === 'online');
+        
+        // Check for alerts with current settings
+        if (currentSettings) {
+          const newAlerts = [];
+          const power = Number(liveDataResponse.power) || 0;
+          const voltage = Number(liveDataResponse.voltage) || 0;
+          const powerThreshold = Number(currentSettings.power_threshold) || 2000;
+          const voltageMin = Number(currentSettings.voltage_min) || 200;
+          const voltageMax = Number(currentSettings.voltage_max) || 250;
+          
+          if (power > powerThreshold) {
+            newAlerts.push({ 
+              type: 'warning', 
+              message: `High power consumption: ${power.toFixed(1)}W (Threshold: ${powerThreshold}W)`,
+              timestamp: new Date()
+            });
+          }
+          if (voltage < voltageMin || voltage > voltageMax) {
+            newAlerts.push({ 
+              type: 'danger', 
+              message: `Voltage out of range: ${voltage.toFixed(1)}V (Range: ${voltageMin}-${voltageMax}V)`,
+              timestamp: new Date()
+            });
+          }
+          if (newAlerts.length > 0) {
+            setAlerts(newAlerts);
+            setTimeout(() => setAlerts([]), 10000);
+          }
+        }
         
         // Add data point to chart from API call (as backup when WebSocket isn't working)
         if (liveDataResponse.power !== undefined) {
@@ -115,9 +156,6 @@ export const RealTimeProvider = ({ children }) => {
       if (peakResponse.status === 'fulfilled' && peakResponse.value?.data) {
         setPeakUsage(peakResponse.value.data);
       }
-      if (settingsResponse.status === 'fulfilled' && settingsResponse.value?.data) {
-        setSettings(settingsResponse.value.data);
-      }
     } catch (error) {
       console.error('Error fetching initial data:', error);
     }
@@ -127,17 +165,23 @@ export const RealTimeProvider = ({ children }) => {
     const newAlerts = [];
     
     if (settings) {
-      if (data.power > settings.power_threshold) {
+      const power = Number(data.power) || 0;
+      const voltage = Number(data.voltage) || 0;
+      const powerThreshold = Number(settings.power_threshold) || 2000;
+      const voltageMin = Number(settings.voltage_min) || 200;
+      const voltageMax = Number(settings.voltage_max) || 250;
+      
+      if (power > powerThreshold) {
         newAlerts.push({ 
           type: 'warning', 
-          message: `High power consumption: ${data.power}W`,
+          message: `High power consumption: ${power.toFixed(1)}W (Threshold: ${powerThreshold}W)`,
           timestamp: new Date()
         });
       }
-      if (data.voltage < settings.voltage_min || data.voltage > settings.voltage_max) {
+      if (voltage < voltageMin || voltage > voltageMax) {
         newAlerts.push({ 
           type: 'danger', 
-          message: `Voltage out of range: ${data.voltage}V`,
+          message: `Voltage out of range: ${voltage.toFixed(1)}V (Range: ${voltageMin}-${voltageMax}V)`,
           timestamp: new Date()
         });
       }

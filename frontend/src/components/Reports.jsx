@@ -11,7 +11,7 @@ export default function Reports() {
   const [darkMode, setDarkMode] = useState(localStorage.getItem('theme') === 'dark');
 
   // Get real-time data
-  const { liveData, monthlyCost, isConnected, lastUpdate, alerts } = useRealTimeData();
+  const { liveData, monthlyCost, isConnected, lastUpdate, alerts, dataSource } = useRealTimeData();
 
   const handleGenerateReport = async () => {
     if (!startDate || !endDate) {
@@ -72,10 +72,10 @@ export default function Reports() {
             
             {/* Real-time Status Badge */}
             <div className="flex items-center space-x-4">
-              <div className={`flex items-center px-3 py-2 rounded-lg ${isConnected ? (darkMode ? 'bg-green-900/50 text-green-300' : 'bg-green-100 text-green-800') : (darkMode ? 'bg-red-900/50 text-red-300' : 'bg-red-100 text-red-800')}`}>
-                <div className={`w-2 h-2 rounded-full mr-2 ${isConnected ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></div>
+              <div className={`flex items-center px-3 py-2 rounded-lg ${dataSource === 'esp32' ? (darkMode ? 'bg-green-900/50 text-green-300' : 'bg-green-100 text-green-800') : (darkMode ? 'bg-red-900/50 text-red-300' : 'bg-red-100 text-red-800')}`}>
+                <div className={`w-2 h-2 rounded-full mr-2 ${dataSource === 'esp32' ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></div>
                 <span className="text-sm font-medium">
-                  {isConnected ? 'Live Data' : 'Offline'}
+                  {dataSource === 'esp32' ? 'ESP32 Online' : 'Offline'}
                 </span>
               </div>
               
@@ -111,8 +111,8 @@ export default function Reports() {
             
             <div className={`rounded-2xl shadow-lg p-6 border-3 ${darkMode ? 'bg-slate-800 border-slate-600' : 'bg-white border-gray-300'}`}>
               <h3 className={`text-lg font-semibold mb-2 ${darkMode ? 'text-white' : 'text-gray-800'}`}>Device Status</h3>
-              <p className={`text-3xl font-bold ${isConnected ? 'text-green-600' : 'text-red-600'}`}>
-                {isConnected ? 'Online' : 'Offline'}
+              <p className={`text-3xl font-bold ${dataSource === 'esp32' ? 'text-green-600' : 'text-red-600'}`}>
+                {dataSource === 'esp32' ? 'Online' : 'Offline'}
               </p>
               <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                 ESP32_001 • {(Number(liveData?.voltage) || 0).toFixed(1)}V

@@ -1,268 +1,188 @@
-# 🔋 IoT Energy Monitoring System
+# ESP32 Energy Monitor System
 
-A comprehensive real-time energy monitoring system built with ESP32, Node.js, React, and MySQL. Monitor your electrical consumption with live data visualization, cost estimation, and smart alerts.
+A real-time energy monitoring system using ESP32 microcontroller, Node.js backend, and React frontend.
 
-![Energy Monitoring System](https://img.shields.io/badge/Status-Active-brightgreen)
-![ESP32](https://img.shields.io/badge/ESP32-Compatible-blue)
-![Node.js](https://img.shields.io/badge/Node.js-Backend-green)
-![React](https://img.shields.io/badge/React-Frontend-blue)
-![MySQL](https://img.shields.io/badge/MySQL-Database-orange)
-
-## ✨ Features
-
-### 📊 Real-Time Monitoring
-- **Live Data Updates**: 1-second interval updates for real-time monitoring
-- **Interactive Charts**: Beautiful, responsive charts showing power consumption trends
-- **Multi-Parameter Tracking**: Voltage, Current, Power, and Energy consumption
-- **30-Second History**: Visual timeline of recent power usage
-
-### 🎯 Smart Analytics
-- **Cost Estimation**: Automatic electricity bill calculation based on tariff slabs
-- **Peak Usage Detection**: Identify high-consumption periods
-- **Energy Saving Tips**: Intelligent recommendations for reducing consumption
-- **Monthly Reports**: Comprehensive usage analysis and PDF reports
-
-### 🚨 Alert System
-- **Threshold Monitoring**: Customizable power and voltage limits
-- **Real-Time Notifications**: Instant alerts for abnormal readings
-- **Visual Indicators**: Color-coded status indicators for quick assessment
-
-### 🌐 Modern Web Interface
-- **Responsive Design**: Works perfectly on desktop, tablet, and mobile
-- **Dark/Light Mode**: Toggle between themes for comfortable viewing
-- **Real-Time Status**: Live connection status with ESP32 device
-- **User Authentication**: Secure login system with device-specific access
-
-## 🏗️ System Architecture
+## Project Structure
 
 ```
-┌─────────────────┐    WiFi     ┌──────────────────┐    HTTP/WS    ┌─────────────────┐
-│     ESP32       │ ──────────► │   Node.js API    │ ────────────► │   React Web     │
-│  (Hardware)     │             │   (Backend)      │               │   (Frontend)    │
-│                 │             │                  │               │                 │
-│ • Voltage Sensor│             │ • REST API       │               │ • Dashboard     │
-│ • Current Sensor│             │ • WebSocket      │               │ • Charts        │
-│ • WiFi Module   │             │ • Authentication │               │ • Reports       │
-│ • Data Logging  │             │ • Data Storage   │               │ • Settings      │
-└─────────────────┘             └──────────────────┘               └─────────────────┘
-                                          │
-                                          ▼
-                                ┌──────────────────┐
-                                │   MySQL DB       │
-                                │  (Database)      │
-                                │                  │
-                                │ • User Data      │
-                                │ • Energy Logs    │
-                                │ • Settings       │
-                                │ • Reports        │
-                                └──────────────────┘
+├── backend/                 # Node.js Express server
+│   ├── config/             # Database configuration
+│   ├── controllers/        # API controllers
+│   ├── middleware/         # Authentication middleware
+│   ├── routes/             # API routes
+│   ├── .env                # Environment variables
+│   ├── .env.example        # Example environment file
+│   ├── package.json        # Dependencies
+│   └── server.js           # Main server file
+│
+├── frontend/               # React application
+│   ├── src/
+│   │   ├── components/     # React components
+│   │   ├── context/        # React context (real-time data)
+│   │   ├── services/       # API and WebSocket services
+│   │   ├── App.jsx         # Main app component
+│   │   ├── main.jsx        # Entry point
+│   │   └── index.css       # Global styles
+│   ├── package.json        # Dependencies
+│   ├── vite.config.js      # Vite configuration
+│   └── tailwind.config.js  # Tailwind CSS configuration
+│
+├── esp32/                  # ESP32 firmware
+│   └── WORKING_ESP32_CODE.ino  # Main ESP32 code
+│
+├── database/               # Database schema
+│   └── schema.sql          # MySQL database schema
+│
+└── README.md              # This file
 ```
 
-## 🚀 Quick Start
+## Features
 
-### Prerequisites
-- Node.js (v16 or higher)
-- MySQL (v8.0 or higher)
-- ESP32 development board
-- Current sensor (ACS712 or similar)
-- Voltage sensor/divider circuit
+- ✅ Real-time energy monitoring (Voltage, Current, Power)
+- ✅ Energy consumption tracking and reporting
+- ✅ Alert system for power and voltage thresholds
+- ✅ Monthly cost estimation
+- ✅ Live data dashboard with charts
+- ✅ User authentication and device management
+- ✅ WebSocket real-time updates
+- ✅ Responsive UI with dark mode
 
-### 1. Clone Repository
-```bash
-git clone https://github.com/chiragdande45/Energy_Monitoring_System.git
-cd Energy_Monitoring_System
-```
+## Hardware Requirements
 
-### 2. Database Setup
-```bash
-# Install MySQL and create database
-mysql -u root -p
-CREATE DATABASE energy_monitoring;
-```
+- ESP32 microcontroller
+- ZMPT101B voltage sensor
+- ACS712-5A current sensor
+- WiFi connection (2.4GHz)
 
-### 3. Backend Setup
+## Software Requirements
+
+- Node.js (v14+)
+- MySQL (v5.7+)
+- Arduino IDE (for ESP32 programming)
+- npm or yarn
+
+## Installation
+
+### 1. Backend Setup
+
 ```bash
 cd backend
 npm install
-cp .env.example .env
-# Edit .env with your database credentials
-npm start
 ```
 
-### 4. Frontend Setup
+Create `.env` file:
+```
+PORT=5001
+DB_HOST=localhost
+DB_PORT=3306
+DB_NAME=energy_monitor
+DB_USER=root
+DB_PASSWORD=your_password
+JWT_SECRET=your_secret_key
+FRONTEND_URL=http://localhost:5173
+```
+
+### 2. Frontend Setup
+
 ```bash
 cd frontend
 npm install
+```
+
+### 3. Database Setup
+
+Create MySQL database:
+```bash
+mysql -u root -p < database/schema.sql
+```
+
+### 4. ESP32 Setup
+
+1. Open `esp32/WORKING_ESP32_CODE.ino` in Arduino IDE
+2. Update WiFi credentials:
+   ```cpp
+   const char* ssid = "YOUR_WIFI_NAME";
+   const char* password = "YOUR_WIFI_PASSWORD";
+   const char* serverUrl = "http://YOUR_SERVER_IP:5001/api/sensor-data";
+   ```
+3. Upload to ESP32
+
+## Running the Application
+
+### Start Backend
+```bash
+cd backend
 npm run dev
 ```
+Backend runs on `http://localhost:5001`
 
-### 5. ESP32 Setup
-1. Open `esp32/COMPLETE_ESP32_CODE.ino` in Arduino IDE
-2. Install required libraries:
-   - WiFi
-   - HTTPClient
-   - ArduinoJson
-   - WebServer
-3. Update configuration:
-   - WiFi credentials
-   - Server IP address
-   - Device ID
-4. Upload to ESP32
-
-## 📱 Usage
-
-### Web Dashboard
-1. Open http://localhost:5173
-2. Register with your ESP32 device ID
-3. View real-time energy data
-4. Monitor costs and usage patterns
-5. Configure alerts and thresholds
-
-### ESP32 Device
-1. Power on the ESP32
-2. Connect to WiFi automatically
-3. Start sending sensor data
-4. Monitor via built-in web interface (ESP32's IP address)
-
-## 🔧 Configuration
-
-### Backend Configuration (`backend/.env`)
-```env
-DB_HOST=localhost
-DB_USER=root
-DB_PASSWORD=your_password
-DB_NAME=energy_monitoring
-JWT_SECRET=your_jwt_secret
-PORT=5000
+### Start Frontend
+```bash
+cd frontend
+npm run dev
 ```
+Frontend runs on `http://localhost:5173`
 
-### ESP32 Configuration
-```cpp
-// WiFi Settings
-const char* WIFI_SSID = "Your_WiFi_Name";
-const char* WIFI_PASSWORD = "Your_WiFi_Password";
+### Access Application
+Open browser and go to: `http://localhost:5173`
 
-// Server Settings
-const char* SERVER_URL = "http://YOUR_COMPUTER_IP:5000/api/sensor-data";
-const char* DEVICE_ID = "ESP32_001";
-```
+## Default Login
 
-### Update Intervals
-- **Real-time updates**: 1 second (configurable)
-- **Chart data retention**: 30 seconds
-- **API backup calls**: 5 seconds
-- **Database cleanup**: Daily
+- Email: `chirag@gmail.com`
+- Device ID: `ESP32_001`
 
-## 📊 API Endpoints
+## API Endpoints
 
 ### Authentication
-- `POST /api/auth/register` - Register new user
 - `POST /api/auth/login` - User login
+- `POST /api/auth/register` - User registration
 
 ### Energy Data
-- `POST /api/sensor-data` - Store sensor readings (ESP32)
-- `GET /api/energy/live` - Get latest readings
-- `GET /api/energy/history` - Get historical data
-- `GET /api/energy/cost` - Get cost estimates
+- `POST /api/sensor-data` - Receive sensor data from ESP32
+- `GET /api/live-data` - Get latest sensor reading
+- `GET /api/history` - Get historical data
+- `GET /api/monthly-cost` - Get monthly cost estimate
+- `GET /api/peak-usage` - Get peak usage time
+- `GET /api/settings` - Get user settings
+- `PUT /api/settings` - Update user settings
 
-### Settings
-- `GET /api/energy/settings` - Get user settings
-- `PUT /api/energy/settings` - Update settings
+## Sensor Configuration
 
-## 🛠️ Hardware Setup
+### Voltage Sensor (ZMPT101B)
+- Pin 1 (GND) → NEUTRAL wire
+- Pin 2 (VCC) → LIVE wire (220-240V AC)
+- Pin 3 (OUT) → ESP32 GPIO 35
 
-### Required Components
-- ESP32 development board
-- ACS712 current sensor (30A recommended)
-- Voltage divider circuit (for AC voltage measurement)
-- Breadboard and jumper wires
-- Power supply (5V/3.3V)
+### Current Sensor (ACS712-5A)
+- Pin 1 (GND) → ESP32 GND
+- Pin 2 (VOUT) → ESP32 GPIO 34
+- Pin 3 (VCC) → ESP32 3.3V
+- Pin 4 (IP+) → AC wire IN
+- Pin 5 (IP-) → AC wire OUT
 
-### Wiring Diagram
-```
-ESP32 Pin    →    Component
-GPIO 34      →    Current Sensor (Analog Out)
-GPIO 35      →    Voltage Sensor (Analog Out)
-GPIO 2       →    Status LED
-3.3V         →    Sensor VCC
-GND          →    Sensor GND
-```
+**Important**: AC wire must pass THROUGH the sensor hole, not just touch it.
 
-### Safety Warning ⚠️
-- **High Voltage**: Be extremely careful when working with AC mains voltage
-- **Isolation**: Use proper isolation circuits for voltage measurement
-- **Testing**: Test with low voltage DC first before connecting to AC mains
-- **Professional Help**: Consider consulting an electrician for AC connections
+## Troubleshooting
 
-## 🧪 Testing & Simulation
+### ESP32 Not Connecting
+- Verify WiFi SSID and password
+- Check server URL and IP address
+- Ensure WiFi is 2.4GHz (not 5GHz)
 
-### Simulation Mode
-For testing without hardware:
-```bash
-# Run simulation script
-node test-esp32-data.js
-```
+### No Data on Dashboard
+- Check if backend is running on correct port
+- Verify database connection
+- Check browser console for errors
 
-This generates realistic sensor data for development and testing.
+### Incorrect Readings
+- Verify sensor connections
+- Check sensor calibration
+- Ensure AC wire passes through current sensor hole
 
-### Connection Testing
-```bash
-# Test ESP32 connectivity
-node test-db.js
-```
+## License
 
-## 📈 Performance
+MIT License - See LICENSE file for details
 
-### System Specifications
-- **Update Rate**: 1 second real-time updates
-- **Data Retention**: 30 seconds live, unlimited historical
-- **Concurrent Users**: 100+ supported
-- **Database**: Optimized for time-series data
-- **Response Time**: <100ms for live data
+## Support
 
-### Optimization Features
-- WebSocket for real-time communication
-- Efficient database indexing
-- Client-side data caching
-- Responsive chart rendering
-- Mobile-optimized interface
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit changes (`git commit -m 'Add AmazingFeature'`)
-4. Push to branch (`git push origin feature/AmazingFeature`)
-5. Open Pull Request
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- ESP32 community for excellent documentation
-- Chart.js for beautiful visualizations
-- Node.js and React communities
-- Open source contributors
-
-## 📞 Support
-
-- **Issues**: [GitHub Issues](https://github.com/chiragdande45/Energy_Monitoring_System/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/chiragdande45/Energy_Monitoring_System/discussions)
-- **Email**: [Your Email]
-
-## 🔮 Roadmap
-
-- [ ] Mobile app (React Native)
-- [ ] Machine learning predictions
-- [ ] Multi-device support
-- [ ] Cloud deployment guides
-- [ ] Advanced analytics dashboard
-- [ ] Integration with smart home systems
-
----
-
-**⭐ Star this repository if you find it helpful!**
-
-Made with ❤️ by [Chirag Dande](https://github.com/chiragdande45)
+For issues or questions, please check the troubleshooting section or contact support.
